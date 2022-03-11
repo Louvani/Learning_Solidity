@@ -17,6 +17,7 @@ import "hardhat/console.sol";
 // Hardhat allows us to do some console logs in our contract.
 import "hardhat/console.sol";
 
+import { Base64 } from "./libraries/Base64.sol";
 
 contract MyEpicNFT is ERC721URIStorage {
     // Magic, OpenZeppelin help us keep track of tokenIds.
@@ -28,13 +29,51 @@ contract MyEpicNFT is ERC721URIStorage {
         console.log("This is my NFT contract. Whoa!");
     }
 
-  string baseSvg = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
-    
+    string baseSvg = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
+
+    string[] firstWords = ["MOUNTAIN", "OCEAN", "SNOW", "PRIDE", "PHOTOGRAPH", "MUSIC"];
+    string[] secondWords = ["BRAVE", "ADVENTUROUS", "ARROGANT", "CLEVER", "FANCY", "FUNNY"];
+    string[] thirdWords = ["KINDLY", "JEALOUSLY", "NEARLY", "RUDELY", "SHILVY", "SUDDENLY"];
+
+    function pickRandom(uint256 tokenId, string[] memory listOfWords) public pure returns (string memory) {
+        uint256 rand = random(string(abi.encodePacked("MIXING_WORDS", Strings.toString(tokenId))));
+        rand = rand % listOfWords.length;
+        return listOfWords[rand];
+    }
+
+    function random(string memory input) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(input)));
+    }
+
     // Function that the user hit to get the NFT
     function makeAnEpicNFT() public {
         //get the current ID that starts at 0
         uint256 newItemId = _tokenIds.current();
+        console.log("\n--------------------");
 
+        string memory first = pickRandom(newItemId, firstWords);
+        string memory second = pickRandom(newItemId, secondWords);
+        string memory third = pickRandom(newItemId, thirdWords);
+
+        string memory combinedWord = string(abi.encodePacked(first, second, third));
+        string memory finalSvg = string(abi.encodePacked(baseSvg, combinedWord, "</text></svg>"));
+
+        string memory json = Base64.encode(
+            bytes(string(abi.encodePacked(
+                '{"name": "',
+                combinedWord,
+                '", "description": "A highly acclaimed collection of words.", "image": "data:image/svg+xml;base64,',
+                Base64.encode(bytes(finalSvg)),
+                '"}'
+            )))
+        );
+
+        string memory finaltokenURI = string(abi.encodePacked("data:application/json;base64,", json));
+
+
+        console.log("\n--------------------");
+        console.log(finaltokenURI);
+        console.log("--------------------\n");
         /** Mint the NFT to the sender using msg.sender addres
          * msg.sender is a variable Solidity itself provides
          * that easily gives us access to the public address
@@ -43,10 +82,10 @@ contract MyEpicNFT is ERC721URIStorage {
         _safeMint(msg.sender, newItemId);
 
         // Set the NFTs data
-        _setTokenURI(newItemId, "data:application/json;base64,eyJuYW1lIjoiTHVjaWVybmFnYSIsImRlc2NyaXB0aW9uIjoiVW5hIG1pcmFkYSIsImltYWdlIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTXpVd0lpQm9aV2xuYUhROUlqTTFNQ0lnZG1sbGQwSnZlRDBpTUNBd0lETTFNQ0F6TlRBaUlHWnBiR3c5SW01dmJtVWlJSGh0Ykc1elBTSm9kSFJ3T2k4dmQzZDNMbmN6TG05eVp5OHlNREF3TDNOMlp5SStDaUFnSUNBOGMzUjViR1UrTG1KaGMyVWdleUJtYVd4c09pQnZiR2wyWlRzZ1ptOXVkQzFtWVcxcGJIazZJSE5sY21sbU95Qm1iMjUwTFhOcGVtVTZJRFF3Y0hnN0lIMDhMM04wZVd4bFBnb2dJQ0FnUEhKbFkzUWdkMmxrZEdnOUlqRXdNQ1VpSUdobGFXZG9kRDBpTVRBd0pTSWdabWxzYkQwaVlteGhZMnNpSUM4K0NpQWdJQ0E4ZEdWNGRDQjRQU0kxTUNVaUlIazlJalExSlNJZ1kyeGhjM005SW1KaGMyVWlJR1J2YldsdVlXNTBMV0poYzJWc2FXNWxQU0p0YVdSa2JHVWlJSFJsZUhRdFlXNWphRzl5UFNKdGFXUmtiR1VpUGt4MVkybGxjbTVoWjJFOEwzUmxlSFErQ2p3dmMzWm5QZ289In0=");
-        console.log("An NFT w/ ID %s has been minted to %s", newItemId, msg.sender);
+        _setTokenURI(newItemId, finaltokenURI);
 
         // Increment the counter for the next NFT
         _tokenIds.increment();
+        console.log("An NFT w/ ID %s has been minted to %s", newItemId, msg.sender);
     }
 }
