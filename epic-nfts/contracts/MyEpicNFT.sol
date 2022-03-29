@@ -35,6 +35,8 @@ contract MyEpicNFT is ERC721URIStorage {
     string[] secondWords = ["BRAVE", "ADVENTUROUS", "ARROGANT", "CLEVER", "FANCY", "FUNNY"];
     string[] thirdWords = ["KINDLY", "JEALOUSLY", "NEARLY", "RUDELY", "SHILVY", "SUDDENLY"];
 
+    event NewEpicNFTMinted(address sender, uint tokenId);
+
     function pickRandom(uint256 tokenId, string[] memory listOfWords) public pure returns (string memory) {
         uint256 rand = random(string(abi.encodePacked("MIXING_WORDS", Strings.toString(tokenId))));
         rand = rand % listOfWords.length;
@@ -72,7 +74,14 @@ contract MyEpicNFT is ERC721URIStorage {
 
 
         console.log("\n--------------------");
-        console.log(finaltokenURI);
+        console.log(
+            string(
+                abi.encodePacked(
+                    "https://nftpreview.0xdev.codes/?code=",
+                    finaltokenURI
+                )
+            )
+        );
         console.log("--------------------\n");
         /** Mint the NFT to the sender using msg.sender addres
          * msg.sender is a variable Solidity itself provides
@@ -87,5 +96,7 @@ contract MyEpicNFT is ERC721URIStorage {
         // Increment the counter for the next NFT
         _tokenIds.increment();
         console.log("An NFT w/ ID %s has been minted to %s", newItemId, msg.sender);
+
+        emit NewEpicNFTMinted(msg.sender, newItemId);
     }
 }
