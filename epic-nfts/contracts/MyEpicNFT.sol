@@ -47,10 +47,15 @@ contract MyEpicNFT is ERC721URIStorage {
         return uint256(keccak256(abi.encodePacked(input)));
     }
 
+    function getTotalNFTs() public view returns (uint256){
+        return _tokenIds.current();
+    }
+
     // Function that the user hit to get the NFT
     function makeAnEpicNFT() public {
         //get the current ID that starts at 0
         uint256 newItemId = _tokenIds.current();
+        require(newItemId + 1 <= 25, "Can not mint more than 25 NFTs");
         console.log("\n--------------------");
 
         string memory first = pickRandom(newItemId, firstWords);
